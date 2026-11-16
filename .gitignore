@@ -1,0 +1,27 @@
+
+# Dependências
+node_modules/
+
+# Arquivos gerados
+dist/
+*.log
+
+# Variáveis de ambiente e credenciais
+.env
+.env.*
+!.env.example
+
+# Arquivos enviados pelos usuários
+uploads/
+
+# Backups e arquivos temporários
+*.bak
+*.backup
+*.dump
+*.sql.gz
+*.tmp
+backups/
+
+# Arquivos locais do sistema
+.DS_Store
+Thumbs.db

@@ -1,0 +1,93 @@
+{
+  "name": "LM Gestão - Alerta de despesas por Gmail",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lm-custos",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "id": "a4840eb5-c80f-48a1-8a95-115fe394b6bd",
+      "name": "Webhook LM Gestão",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "lm-custos"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || {};\n\nif (body.event !== 'vehicle_expense_limit_reached') {\n  throw new Error('Evento não reconhecido.');\n}\n\nif (\n  typeof body.vehicle_name !== 'string' ||\n  !body.vehicle_name.trim() ||\n  typeof body.total_expenses_cents !== 'number' ||\n  typeof body.limit_cents !== 'number' ||\n  !Number.isSafeInteger(body.total_expenses_cents) ||\n  !Number.isSafeInteger(body.limit_cents) ||\n  body.total_expenses_cents < body.limit_cents ||\n  body.limit_cents <= 0\n) {\n  throw new Error('Dados do alerta inválidos.');\n}\n\nconst currency = cents =>\n  (cents / 100).toLocaleString('pt-BR', {\n    style: 'currency',\n    currency: 'BRL'\n  });\n\nconst vehicle = body.vehicle_name.trim();\n\nconst subject = `LM Gestão | Alerta de limite de despesas - ${vehicle}`;\n\nconst message = `\nLM VEÍCULOS - ALERTA DE DESPESAS\n\nAtenção! Um veículo atingiu o limite de despesas estabelecido.\n\nVeículo: ${vehicle}\n\nTotal de despesas: ${currency(body.total_expenses_cents)}\n\nLimite configurado: ${currency(body.limit_cents)}\n\nRecomendamos verificar os gastos registrados no painel LM Gestão para acompanhar os custos do veículo.\n\nAtenciosamente,\nSistema LM Gestão\n\nEsta é uma notificação automática. Não é necessário responder.\n`.trim();\n\nreturn [\n  {\n    json: {\n      subject,\n      message,\n      vehicle_id: body.vehicle_id || ''\n    }\n  }\n];"
+      },
+      "id": "aa4bf903-ccbc-43d1-b85b-26f212793b82",
+      "name": "Validar e preparar alerta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "destinatario@example.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.message }}",
+        "options": {
+          "senderName": "LM Gestão"
+        }
+      },
+      "id": "4d5be7e6-cf92-45d5-9ee9-29ed3161b41b",
+      "name": "Enviar alerta pelo Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        544,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "webhookId": "3014020f-7a97-4e0e-a720-968d7914699f"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook LM Gestão": {
+      "main": [
+        [
+          {
+            "node": "Validar e preparar alerta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar e preparar alerta": {
+      "main": [
+        [
+          {
+            "node": "Enviar alerta pelo Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

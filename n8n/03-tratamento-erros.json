@@ -1,0 +1,50 @@
+{
+  "name": "LM Gestão - Tratamento de Erros",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9ec26879-9e4c-4ffa-97f3-eeb8714f2673",
+      "name": "LM Gestão - Tratamento de Erros"
+    },
+    {
+      "parameters": {
+        "jsCode": "const dados = $input.first().json;\n\nconst workflow = dados.workflow?.name || 'Workflow desconhecido';\nconst erro = dados.execution?.error?.message\n  || dados.trigger?.error?.message\n  || 'Erro não identificado';\n\nconst no = dados.execution?.lastNodeExecuted || 'Não informado';\n\nconsole.log(`[LM Gestão] Falha no workflow: ${workflow}`);\nconsole.log(`Nó: ${no}`);\nconsole.log(`Erro: ${erro}`);\n\nreturn [{\n  json: {\n    workflow,\n    no,\n    erro,\n    data: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "d439456c-b91c-4abc-b0a1-87fc43fcd72b",
+      "name": "Registrar detalhes do erro"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "LM Gestão - Tratamento de Erros": {
+      "main": [
+        [
+          {
+            "node": "Registrar detalhes do erro",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
